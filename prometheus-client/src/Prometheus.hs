@@ -6,6 +6,7 @@ module Prometheus (
 
     registerIO
 ,   register
+,   registerSTM
 ,   unsafeRegisterIO
 ,   unsafeRegister
 ,   unregisterAll

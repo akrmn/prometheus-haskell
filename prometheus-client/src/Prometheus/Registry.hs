@@ -2,6 +2,7 @@
 module Prometheus.Registry (
     register
 ,   registerIO
+,   registerSTM
 ,   unsafeRegister
 ,   unsafeRegisterIO
 ,   collectMetrics
@@ -11,6 +12,7 @@ module Prometheus.Registry (
 import Prometheus.Metric
 
 import Control.Applicative ((<$>))
+import Control.Concurrent.STM (STM)
 import Control.Monad.IO.Class
 import System.IO.Unsafe (unsafePerformIO)
 import qualified Control.Concurrent.STM as STM
@@ -35,6 +37,14 @@ register (Metric mk) = liftIO $ do
     let addToRegistry = (sampleGroups :)
     liftIO $ STM.atomically $ STM.modifyTVar' globalRegistry addToRegistry
     return metric
+
+registerSTM :: MonadIO m => Metric s -> m (STM s)
+registerSTM (Metric mk) = liftIO $ do
+    (metric, sampleGroups) <- mk
+    let addToRegistry = (sampleGroups :)
+    pure $ do
+        STM.modifyTVar' globalRegistry addToRegistry
+        return metric
 
 -- | Registers a metric with the global metric registry.
 registerIO :: MonadIO m => m (Metric s) -> m s
